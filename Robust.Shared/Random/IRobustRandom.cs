@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Collections;
+using Robust.Shared.Console.Commands;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Random;
@@ -183,6 +185,40 @@ public static class RandomHelpers
             var k = random.Next(n + 1);
             (list[k], list[n]) = (list[n], list[k]);
         }
+    }
+
+    /// <summary>
+    /// Return a random value from a weighted list of items
+    /// </summary>
+    /// <param name="random"></param>
+    /// <param name="list"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public static T WeightedList<T>(this System.Random random, List<(T val, double? weight)> list) where T : notnull
+    {
+        var cumulativeProbability  = 0.0;
+        List<(T key, double probability)> cumulativelyWeightedList = [];
+        // for weighted values in the list
+        foreach (var item in list.Where(item => item.weight.HasValue))
+        {
+            cumulativelyWeightedList.Add((item.val, cumulativeProbability));
+            cumulativeProbability += item.weight!.Value;
+        }
+        // for unweighted values in the list
+        var dividedHighWeight = cumulativeProbability * list.Count(item => !item.weight.HasValue)  / cumulativelyWeightedList.Count;
+        foreach (var item in list.Where(item => !item.weight.HasValue))
+        {
+            cumulativelyWeightedList.Add((item.val, cumulativeProbability));
+            cumulativeProbability += dividedHighWeight;
+        }
+
+        var roll = random.NextDouble() * cumulativeProbability;
+        var selected = default(T)!;
+        foreach (var item in cumulativelyWeightedList.Where(item => roll > item.probability))
+        {
+            selected = item.key;
+        }
+        return selected;
     }
 
     public static bool Prob(this System.Random random, double chance)
