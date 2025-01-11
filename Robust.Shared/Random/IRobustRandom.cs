@@ -188,7 +188,7 @@ public static class RandomHelpers
     }
 
     /// <summary>
-    /// Return a random value from a weighted list of items
+    /// Return a random value from a weighted list of items, if a value is not provided a weight, it will be assigned a weight of "1"
     /// </summary>
     /// <param name="random"></param>
     /// <param name="list"></param>
@@ -196,27 +196,26 @@ public static class RandomHelpers
     /// <returns></returns>
     public static T WeightedList<T>(this System.Random random, List<(T val, double? weight)> list) where T : notnull
     {
-        var cumulativeProbability  = 0.0;
-        List<(T key, double probability)> cumulativelyWeightedList = [];
-        // for weighted values in the list
-        foreach (var item in list.Where(item => item.weight.HasValue))
+        if (list.Count == 1)
         {
-            cumulativelyWeightedList.Add((item.val, cumulativeProbability));
-            cumulativeProbability += item.weight!.Value;
+            return list[0].val;
         }
-        // for unweighted values in the list
-        var dividedHighWeight = cumulativeProbability * list.Count(item => !item.weight.HasValue)  / cumulativelyWeightedList.Count;
-        foreach (var item in list.Where(item => !item.weight.HasValue))
+        var cumulativeProbability = 0.0;
+        List<(T key, double probability)> cumulativelyWeightedList = [];
+
+        // for weighted values in the list
+        foreach (var item in list)
         {
             cumulativelyWeightedList.Add((item.val, cumulativeProbability));
-            cumulativeProbability += dividedHighWeight;
+            cumulativeProbability += item.weight ?? 1;
         }
 
         var roll = random.NextDouble() * cumulativeProbability;
         var selected = default(T)!;
-        foreach (var item in cumulativelyWeightedList.Where(item => roll > item.probability))
+        foreach (var item in cumulativelyWeightedList)
         {
-            selected = item.key;
+            if(roll > item.probability)
+                selected = item.key;
         }
         return selected;
     }
