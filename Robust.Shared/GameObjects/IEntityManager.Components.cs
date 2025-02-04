@@ -342,6 +342,15 @@ namespace Robust.Shared.GameObjects
         bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? meta = null);
 
         /// <summary>
+        /// Copy a component from the source entity to the target entity.
+        /// </summary>
+        /// <param name="source">The Source of the component to copy</param>
+        /// <param name="target">The entity to copy the component too</param>
+        /// <param name="destination"> The resulting copied component placed onto the entity</param>
+        /// <param name="metadataTarget">Optional, Metadata of the target</param>
+        bool CopyComp<T>(EntityUid source, EntityUid target, [NotNullWhen(true)] out T? destination, MetaDataComponent? metadataTarget = null) where T : IComponent, new();
+
+        /// <summary>
         /// Returns a cached struct enumerator with the specified component.
         /// </summary>
         EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent;

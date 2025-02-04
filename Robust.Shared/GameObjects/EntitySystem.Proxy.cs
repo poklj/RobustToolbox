@@ -509,6 +509,12 @@ public partial class EntitySystem
         return EntityManager.MetaQuery.TryGetComponent(uid.Value, out comp);
     }
 
+    /// <inheritdoc cref="IEntityManager.CopyComp&lt;T&gt;(Entity&lt;T?gt;, EntityUid, out T?)"/>
+    protected bool CopyComp<T>(EntityUid source, EntityUid target, [NotNullWhen(true)] out T? destination) where T: IComponent, new()
+    {
+      return EntityManager.CopyComp<T>(source, target, out destination);
+    }
+
     /// <inheritdoc cref="IEntityManager.GetComponents"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<IComponent> AllComps(EntityUid uid)

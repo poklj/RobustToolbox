@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
@@ -1026,6 +1027,25 @@ namespace Robust.Shared.GameObjects
             }
 
             return TryGetComponent(uid.Value, netId, out component, meta);
+        }
+
+        /// <inheritdoc />
+        public bool CopyComp<T>(EntityUid source, EntityUid target, [NotNullWhen(true)] out T? destination, MetaDataComponent? metadataTarget = null) where T : IComponent, new()
+        {
+            if (!MetaQuery.Resolve(target, ref metadataTarget, false))
+                throw new ArgumentException($"Entity {target} is not valid.", nameof(target));
+            if (!TryGetComponent<T>(source, out var comp))
+            {
+                destination = default;
+                return false;
+            }
+            var compReg = ComponentFactory.GetRegistration(comp);
+            destination = (T) ComponentFactory.GetComponent(compReg);
+            // Use the serialization manager to do the copying.
+            _serManager.CopyTo(comp, ref destination, notNullableOverride: true);
+
+            AddComponentInternal(target, destination, compReg, true, false, metadataTarget);
+            return true;
         }
 
         public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent
